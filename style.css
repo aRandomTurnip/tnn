@@ -1,0 +1,36 @@
+div {
+  padding: 25px;
+}
+
+body {
+  font-family: Helvetica;
+  background-color: #5170ff;
+}
+
+.title, h1, h2, h3, p {
+	color: white;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #4565f0;
+}
+
+ul li {
+  float: left;
+}
+
+ul li a, ul li logo1 {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+ul li a:hover {
+  background-color: #3050e0;
+}
