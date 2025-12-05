@@ -34,3 +34,13 @@ ul li a, ul li logo1 {
 ul li a:hover {
   background-color: #3050e0;
 }
+
+.article-header {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* space between h3 and button */
+}
+
+.article-header h3 {
+    margin: 0; /* removes default spacing */
+}
