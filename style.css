@@ -1,13 +1,11 @@
 .article-header {
   display: flex;
-  align-items: center;
   gap: 10px;
 }
 
 .article-header h3 {
   flex: 1;
   margin: 0;
-  text-align: center;
 }
 
 div {
