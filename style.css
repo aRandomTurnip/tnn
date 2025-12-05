@@ -42,5 +42,7 @@ ul li a:hover {
 }
 
 .article-header h3 {
-    margin: 0; /* removes default spacing */
+    margin: 0;
+    flex: 1;                 /* makes the h3 take all space */
+    text-align: center;      /* centers text without shifting layout */
 }
