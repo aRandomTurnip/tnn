@@ -1,6 +1,10 @@
-/*div {
+.article-header {
+    padding: 0 !important;
+}
+
+div {
   padding: 25px;
-}*/
+}
 
 body {
   font-family: Helvetica;
