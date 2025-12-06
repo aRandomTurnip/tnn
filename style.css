@@ -46,3 +46,17 @@ ul li a:hover {
     flex: 1;                 /* makes the h3 take all space */
     text-align: center;      /* centers text without shifting layout */
 }
+
+button {
+ color: white;
+ background-color: blue; /* or 008CBA */
+ border: none;
+ padding: 15px 32px;
+ text-align: center;
+ text-decoration: none;
+ display: inline-block;
+ font-size: 16px;
+ margin: 4px 2px;
+ cursor: pointer;
+ border-radius: 8px
+}
