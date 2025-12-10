@@ -1,1 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Countdown Timer (DD:HH:MM:SS)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --fg: #e2e8f0;
+      --accent: #22d3ee;
+      --muted: #94a3b8;
+      --overlay-bg: rgba(10, 15, 25, 0.92);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(1000px 600px at 50% 40%, #1e293b, var(--bg));
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+    }
+
+    .timer {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.04);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      backdrop-filter: blur(8px);
+    }
+
+    .block {
+      min-width: 110px;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      text-align: center;
+    }
+
+    .value {
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+      color: var(--fg);
+    }
+
+    .label {
+      margin-top: 0.35rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .separator {
+      font-size: clamp(2rem, 4vw, 2.6rem);
+      color: var(--accent);
+      opacity: 0.8;
+    }
+
+    .controls {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    button {
+      padding: 0.6rem 0.95rem;
+      border-radius: 0.6rem;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      color: var(--fg);
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    button:hover { transform: translateY(-1px); background: rgba(255,255,255,0.12); }
+    button:active { transform: translateY(0); }
+
+    /* Full-screen announcement overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none; /* shown at end */
+      place-items: center;
+      background: var(--overlay-bg);
+      z-index: 9999;
+    }
+    .overlay.show { display: grid; }
+
+    .overlay-card {
+      max-width: min(900px, 92vw);
+      padding: clamp(2rem, 4vw, 3rem);
+      border-radius: 1.25rem;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.18);
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    .overlay-title {
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 800;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: 0.01em;
+    }
+
+    .overlay-sub {
+      font-size: clamp(1rem, 3vw, 1.25rem);
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .overlay-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .primary {
+      background: linear-gradient(90deg, #22d3ee, #60a5fa);
+      color: #0b1220;
+      border: none;
+    }
+    .primary:hover { filter: brightness(1.06); }
+
+    .sr-live {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="timer" role="group" aria-label="Countdown timer">
+    <div class="block">
+      <div id="days" class="value">00</div>
+      <div class="label">Days</div>
+    </div>
+    <div class="separator">:</div>
+    <div class="block">
+      <div id="hours" class="value">00</div>
+      <div class="label">Hours</div>
+    </div>
+    <div class="separator">:</div>
+    <div class="block">
+      <div id="minutes" class="value">00</div>
+      <div class="label">Minutes</div>
+    </div>
+    <div class="separator">:</div>
+    <div class="block">
+      <div id="seconds" class="value">00</div>
+      <div class="label">Seconds</div>
+    </div>
+  </div>
+
+  <div class="controls">
+   
+  </div>
+
+  <!-- Screen-covering announcement -->
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="overlay-card" role="dialog" aria-modal="true" aria-label="Timer finished announcement">
+      <h1 class="overlay-title">Time’s up!</h1>
+      <p class="overlay-sub">The countdown has reached zero. Take a breath, then continue when you’re ready.</p>
+      <div class="overlay-actions">
+        <button class="primary" id="dismiss">Dismiss overlay</button>
+        <button id="restart">Restart last duration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accessible live region for screen readers -->
+  <div class="sr-live" aria-live="polite" aria-atomic="true" id="live"></div>
+
+  <script>
+    (function() {
+      // Elements
+      const dEl = document.getElementById('days');
+      const hEl = document.getElementById('hours');
+      const mEl = document.getElementById('minutes');
+      const sEl = document.getElementById('seconds');
+      const liveEl = document.getElementById('live');
+
+      const overlay = document.getElementById('overlay');
+      const dismissBtn = document.getElementById('dismiss');
+      const restartBtn = document.getElementById('restart');
+
+      const start10Btn = document.getElementById('start10');
+      const start1hBtn = document.getElementById('start1h');
+      const pauseBtn = document.getElementById('pause');
+      const resumeBtn = document.getElementById('resume');
+      const resetBtn = document.getElementById('reset');
+
+      // State
+      let endTimeMs = null;
+      let lastDurationMs = 0;
+      let remainingPausedMs = null;
+      let rafId = null;
+      let ticking = false;
+
+      // Helpers
+      const pad2 = (n) => String(n).padStart(2, '0');
+
+      function setDisplay(ms) {
+        const totalSec = Math.max(0, Math.floor(ms / 1000));
+        const days = Math.floor(totalSec / 86400);
+        const hours = Math.floor((totalSec % 86400) / 3600);
+        const minutes = Math.floor((totalSec % 3600) / 60);
+        const seconds = totalSec % 60;
+
+        dEl.textContent = pad2(days);
+        hEl.textContent = pad2(hours);
+        mEl.textContent = pad2(minutes);
+        sEl.textContent = pad2(seconds);
+
+        liveEl.textContent = `Remaining ${days} days ${hours} hours ${minutes} minutes ${seconds} seconds`;
+      }
+
+      function showOverlay() {
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+      }
+
+      function hideOverlay() {
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+
+      function stopTick() {
+        ticking = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      function tick() {
+        if (!ticking) return;
+        const now = performance.now();
+        const left = endTimeMs - now;
+
+        if (left <= 0) {
+          setDisplay(0);
+          stopTick();
+          showOverlay();
+          return;
+        }
+
+        setDisplay(left);
+        rafId = requestAnimationFrame(tick);
+      }
+
+      function startDuration(ms) {
+        lastDurationMs = ms;
+        remainingPausedMs = null;
+        hideOverlay();
+        const now = performance.now();
+        endTimeMs = now + ms;
+        setDisplay(ms);
+        if (!ticking) {
+          ticking = true;
+          rafId = requestAnimationFrame(tick);
+        }
+      }
+
+      function pause() {
+        if (!ticking || endTimeMs == null) return;
+        const now = performance.now();
+        remainingPausedMs = Math.max(0, endTimeMs - now);
+        stopTick();
+      }
+
+      function resume() {
+        if (remainingPausedMs == null || remainingPausedMs <= 0) return;
+        hideOverlay();
+        const now = performance.now();
+        endTimeMs = now + remainingPausedMs;
+        ticking = true;
+        rafId = requestAnimationFrame(tick);
+      }
+
+      function reset() {
+        stopTick();
+        endTimeMs = null;
+        remainingPausedMs = null;
+        setDisplay(0);
+        hideOverlay();
+      }
+
+      // Buttons
+      start10Btn.addEventListener('click', () => startDuration(10 * 60 * 1000));
+      start1hBtn.addEventListener('click', () => startDuration(60 * 60 * 1000));
+      pauseBtn.addEventListener('click', pause);
+      resumeBtn.addEventListener('click', resume);
+      resetBtn.addEventListener('click', reset);
+
+      dismissBtn.addEventListener('click', hideOverlay);
+      restartBtn.addEventListener('click', () => {
+        if (lastDurationMs > 0) startDuration(lastDurationMs);
+      });
+
+      // Optional: start a sample timer on load (e.g., 30 seconds)
+      // startDuration(30 * 1000);
+
+      // If you want to count down to a specific date/time:
+       const target = new Date('2026-01-16T23:59:59Z').getTime();
+       startDuration(target - Date.now());
+    })();
+  </script>
+</body>
+</html>
+
 
