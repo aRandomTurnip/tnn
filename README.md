@@ -1,2 +1,2 @@
-# tnn
+# TNN
 Titan News Network
