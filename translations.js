@@ -3,9 +3,9 @@
 
 const translations = {
   en: {
-    title: "Welcome to Titan News Network",
-    headline: "Breaking News",
-    footer: "All rights reserved."
+    h-title: "Welcome to Titan News Network",
+    h-sub: "Our free newspaper can be found in select locations across NMS, handed out by club members, online, and for order to your classroom.",
+    h-faqt: "FAQs"
   },
 
   es: {
