@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Order Your Paper</title>
+  <title>Countdown Timer (DD:HH:MM:SS)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -170,7 +170,7 @@
   </div>
 
   <div class="controls">
-   
+    
   </div>
 
   <!-- Screen-covering announcement -->
@@ -187,141 +187,120 @@
 
   <!-- Accessible live region for screen readers -->
   <div class="sr-live" aria-live="polite" aria-atomic="true" id="live"></div>
+<script>
+  (function() {
+    // Elements
+    const dEl = document.getElementById('days');
+    const hEl = document.getElementById('hours');
+    const mEl = document.getElementById('minutes');
+    const sEl = document.getElementById('seconds');
+    const liveEl = document.getElementById('live');
 
-  <script>
-    (function() {
-      // Elements
-      const dEl = document.getElementById('days');
-      const hEl = document.getElementById('hours');
-      const mEl = document.getElementById('minutes');
-      const sEl = document.getElementById('seconds');
-      const liveEl = document.getElementById('live');
+    const overlay = document.getElementById('overlay');
+    const dismissBtn = document.getElementById('dismiss');
+    const restartBtn = document.getElementById('restart');
 
-      const overlay = document.getElementById('overlay');
-      const dismissBtn = document.getElementById('dismiss');
-      const restartBtn = document.getElementById('restart');
+    // State
+    let endTimeMs = null;
+    let lastDurationMs = 0;
+    let remainingPausedMs = null;
+    let rafId = null;
+    let ticking = false;
 
-      const start10Btn = document.getElementById('start10');
-      const start1hBtn = document.getElementById('start1h');
-      const pauseBtn = document.getElementById('pause');
-      const resumeBtn = document.getElementById('resume');
-      const resetBtn = document.getElementById('reset');
+    // Helpers
+    const pad2 = (n) => String(n).padStart(2, '0');
 
-      // State
-      let endTimeMs = null;
-      let lastDurationMs = 0;
-      let remainingPausedMs = null;
-      let rafId = null;
-      let ticking = false;
+    function setDisplay(ms) {
+      const totalSec = Math.max(0, Math.floor(ms / 1000));
+      const days = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
 
-      // Helpers
-      const pad2 = (n) => String(n).padStart(2, '0');
+      dEl.textContent = pad2(days);
+      hEl.textContent = pad2(hours);
+      mEl.textContent = pad2(minutes);
+      sEl.textContent = pad2(seconds);
 
-      function setDisplay(ms) {
-        const totalSec = Math.max(0, Math.floor(ms / 1000));
-        const days = Math.floor(totalSec / 86400);
-        const hours = Math.floor((totalSec % 86400) / 3600);
-        const minutes = Math.floor((totalSec % 3600) / 60);
-        const seconds = totalSec % 60;
+      liveEl.textContent = `Remaining ${days} days ${hours} hours ${minutes} minutes ${seconds} seconds`;
+    }
 
-        dEl.textContent = pad2(days);
-        hEl.textContent = pad2(hours);
-        mEl.textContent = pad2(minutes);
-        sEl.textContent = pad2(seconds);
+    function showOverlay() {
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
 
-        liveEl.textContent = `Remaining ${days} days ${hours} hours ${minutes} minutes ${seconds} seconds`;
-      }
+    function hideOverlay() {
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
 
-      function showOverlay() {
-        overlay.classList.add('show');
-        overlay.setAttribute('aria-hidden', 'false');
-      }
+    function stopTick() {
+      ticking = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    }
 
-      function hideOverlay() {
-        overlay.classList.remove('show');
-        overlay.setAttribute('aria-hidden', 'true');
-      }
+    function tick() {
+      if (!ticking) return;
+      const now = performance.now();
+      const left = endTimeMs - now;
 
-      function stopTick() {
-        ticking = false;
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = null;
-      }
-
-      function tick() {
-        if (!ticking) return;
-        const now = performance.now();
-        const left = endTimeMs - now;
-
-        if (left <= 0) {
-          setDisplay(0);
-          stopTick();
-          showOverlay();
-          return;
-        }
-
-        setDisplay(left);
-        rafId = requestAnimationFrame(tick);
-      }
-
-      function startDuration(ms) {
-        lastDurationMs = ms;
-        remainingPausedMs = null;
-        hideOverlay();
-        const now = performance.now();
-        endTimeMs = now + ms;
-        setDisplay(ms);
-        if (!ticking) {
-          ticking = true;
-          rafId = requestAnimationFrame(tick);
-        }
-      }
-
-      function pause() {
-        if (!ticking || endTimeMs == null) return;
-        const now = performance.now();
-        remainingPausedMs = Math.max(0, endTimeMs - now);
+      if (left <= 0) {
+        setDisplay(0);
         stopTick();
+        showOverlay();
+        return;
       }
 
-      function resume() {
-        if (remainingPausedMs == null || remainingPausedMs <= 0) return;
-        hideOverlay();
-        const now = performance.now();
-        endTimeMs = now + remainingPausedMs;
+      setDisplay(left);
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function startDuration(ms) {
+      lastDurationMs = ms;
+      remainingPausedMs = null;
+      hideOverlay();
+      const now = performance.now();
+      endTimeMs = now + ms;
+      setDisplay(ms);
+      if (!ticking) {
         ticking = true;
         rafId = requestAnimationFrame(tick);
       }
+    }
 
-      function reset() {
-        stopTick();
-        endTimeMs = null;
-        remainingPausedMs = null;
-        setDisplay(0);
-        hideOverlay();
-      }
+    function pause() {
+      if (!ticking || endTimeMs == null) return;
+      const now = performance.now();
+      remainingPausedMs = Math.max(0, endTimeMs - now);
+      stopTick();
+    }
 
-      // Buttons
-      start10Btn.addEventListener('click', () => startDuration(10 * 60 * 1000));
-      start1hBtn.addEventListener('click', () => startDuration(60 * 60 * 1000));
-      pauseBtn.addEventListener('click', pause);
-      resumeBtn.addEventListener('click', resume);
-      resetBtn.addEventListener('click', reset);
+    function resume() {
+      if (remainingPausedMs == null || remainingPausedMs <= 0) return;
+      hideOverlay();
+      const now = performance.now();
+      endTimeMs = now + remainingPausedMs;
+      ticking = true;
+      rafId = requestAnimationFrame(tick);
+    }
 
-      dismissBtn.addEventListener('click', hideOverlay);
-      restartBtn.addEventListener('click', () => {
-        if (lastDurationMs > 0) startDuration(lastDurationMs);
-      });
+    function reset() {
+      stopTick();
+      endTimeMs = null;
+      remainingPausedMs = null;
+      setDisplay(0);
+      hideOverlay();
+    }
 
-      // Optional: start a sample timer on load (e.g., 30 seconds)
-      // startDuration(30 * 1000);
+    // Buttons event listeners can remain as is if needed.
 
-      // If you want to count down to a specific date/time:
-       const target = new Date('2026-01-16T23:59:59Z').getTime();
-       startDuration(target - Date.now());
-    })();
-  </script>
+    // Start countdown to fixed target date: January 23, 2026 00:00:00 UTC
+    const target = new Date('2026-01-23T12:00:00Z').getTime();
+    startDuration(target - Date.now());
+  })();
+</script>
 </body>
 </html>
-
 
