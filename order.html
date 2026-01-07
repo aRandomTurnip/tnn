@@ -1,1 +1,76 @@
-<iframe name="myiFrame" width="100%" height="100%" src="https://forms.gle/i7K8ZVFaZo6qJ2aQ8" scrolling="yes" marginwidth="0" marginheight="0" style="border:0px none #ffffff;"></iframe>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple HTML Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+       
+        .editor-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .editor, .output {
+            width: 48%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            height: 400px;
+            overflow-y: auto;
+            background-color: white;
+        }
+
+        .editor {
+            resize: horizontal;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            background-color: #fafafa;
+        }
+
+        .output {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple HTML Editor</h1>
+    <div class="editor-container">
+        <div class="editor">
+            <textarea id="html-input" placeholder="Write your HTML code here..."></textarea>
+        </div>
+        <div class="output">
+            <iframe id="html-output" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+    </div>
+   
+    <script>
+        const htmlInput = document.getElementById('html-input');
+        const htmlOutput = document.getElementById('html-output');
+
+        htmlInput.addEventListener('input', function() {
+            const content = htmlInput.value;
+            const doc = htmlOutput.contentDocument || htmlOutput.contentWindow.document;
+            doc.open();
+            doc.write(content);
+            doc.close();
+        });
+    </script>
+</body>
+</html>
